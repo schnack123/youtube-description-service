@@ -22,11 +22,14 @@ app = Flask(__name__)
 # Configure CORS properly for frontend requests
 CORS(
     app,
-    origins=config.CORS_ORIGINS,
-    allow_headers=['Content-Type', 'Authorization'],
-    expose_headers=['Content-Type'],
-    supports_credentials=True,
-    methods=['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS']
+    resources={r"/*": {
+        "origins": config.CORS_ORIGINS,
+        "methods": ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "Accept"],
+        "expose_headers": ["Content-Type"],
+        "supports_credentials": True,
+        "max_age": 3600
+    }}
 )
 
 # Register blueprints
@@ -60,7 +63,12 @@ def require_auth(f):
 # Apply authentication to all routes except health check
 @app.before_request
 def check_auth():
-    """Check authentication for all requests except health check"""
+    """Check authentication for all requests except health check and preflight"""
+    # Allow preflight OPTIONS requests through without auth
+    if request.method == 'OPTIONS':
+        return None
+    
+    # Allow health check through without auth
     if request.path == '/health':
         return None
     
@@ -78,9 +86,11 @@ def check_auth():
         return jsonify({'success': False, 'error': 'Invalid API token'}), 401
 
 
-@app.route('/health', methods=['GET'])
+@app.route('/health', methods=['GET', 'OPTIONS'])
 def health_check():
     """Health check endpoint"""
+    if request.method == 'OPTIONS':
+        return '', 204
     return jsonify({
         'status': 'healthy',
         'service': 'description-service',
