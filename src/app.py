@@ -19,8 +19,15 @@ logger = logging.getLogger(__name__)
 # Create Flask app
 app = Flask(__name__)
 
-# Configure CORS
-CORS(app, origins=config.CORS_ORIGINS)
+# Configure CORS properly for frontend requests
+CORS(
+    app,
+    origins=config.CORS_ORIGINS,
+    allow_headers=['Content-Type', 'Authorization'],
+    expose_headers=['Content-Type'],
+    supports_credentials=True,
+    methods=['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS']
+)
 
 # Register blueprints
 app.register_blueprint(descriptions_bp)
@@ -98,6 +105,7 @@ if __name__ == '__main__':
     logger.info(f"Starting Description Service on {config.HOST}:{config.PORT}")
     logger.info(f"Using Azure OpenAI: {config.USE_AZURE_OPENAI}")
     logger.info(f"Model: {config.AZURE_OPENAI_DEPLOYMENT if config.USE_AZURE_OPENAI else config.OPENAI_MODEL}")
+    logger.info(f"CORS Origins: {config.CORS_ORIGINS}")
     
     app.run(
         host=config.HOST,

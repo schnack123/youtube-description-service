@@ -12,7 +12,8 @@ class Config:
     API_TOKEN = os.getenv('API_TOKEN', 'M44483403m')
     PORT = int(os.getenv('PORT', 8080))
     HOST = os.getenv('HOST', '0.0.0.0')
-    CORS_ORIGINS = os.getenv('CORS_ORIGINS', '').split(',')
+    # Parse CORS origins and strip whitespace from each
+    CORS_ORIGINS = [origin.strip() for origin in os.getenv('CORS_ORIGINS', '').split(',') if origin.strip()]
     
     # PostgreSQL Database
     POSTGRES_HOST = os.getenv('POSTGRES_HOST')
