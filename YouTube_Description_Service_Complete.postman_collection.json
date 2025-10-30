@@ -1,8 +1,8 @@
 {
 	"info": {
-		"_postman_id": "description-service-complete-2025",
-		"name": "YouTube Description Service - Complete",
-		"description": "## YouTube Description Service API\n\n**Complete collection with built-in variables for testing the Description Service.**\n\n### Quick Start\n1. Import this file into Postman\n2. Edit collection variables (click collection → Variables tab)\n3. Change `base_url` to switch between local/production:\n   - Local: `http://localhost:8082`\n   - Production: `https://description-service.sevalla.app`\n4. Start testing!\n\n### Features\n- ✅ Novel-level AI generation\n- ✅ Smart incremental generation\n- ✅ Editable AI prompts\n- ✅ Preview descriptions\n- ✅ Job status tracking\n\n### Authentication\nAll endpoints (except /health) require Bearer token authentication.\n**Token is pre-configured** in collection variables.\n\n### Workflow\n1. **Health Check** → Verify service is running\n2. **Generate Descriptions** → Start job (job_id auto-saved)\n3. **Get Job Status** → Poll until completed\n4. **Preview Description** → View generated content\n5. **Manage Prompts** → Edit AI prompts as needed",
+		"_postman_id": "description-service-v4-2025",
+		"name": "YouTube Description Service - v4",
+		"description": "## YouTube Description Service API\n\n**Complete collection for testing the Description Service with unified generation approach.**\n\n### Architecture\n- **Novel-Level Generation:** 1 OpenAI call per novel (not per video)\n- **88% Cost Savings:** Reuses About/What to Expect/Tags for all videos\n- **2 Prompts:** System prompt (format) + User prompt (content)\n\n### Quick Start\n1. Import this file into Postman\n2. Edit collection variables:\n   - Local: `http://localhost:8080`\n   - Production: `https://description-service.sevalla.app`\n3. Start testing!\n\n### Efficiency\n```\n1 Novel (8 videos) = 1 OpenAI Call\n├─ Generates: About, What to Expect, Tags\n├─ Reuses for all 8 videos\n└─ Only timestamps unique per video\nResult: 88% cheaper, 77% faster!\n```",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"auth": {
@@ -18,7 +18,7 @@
 	"variable": [
 		{
 			"key": "base_url",
-			"value": "http://localhost:8082",
+			"value": "http://localhost:8080",
 			"type": "string",
 			"description": "Service URL. Change to https://description-service.sevalla.app for production"
 		},
@@ -42,7 +42,7 @@
 		},
 		{
 			"key": "video_name",
-			"value": "Chapter-1",
+			"value": "Farming at Hogwarts Chapters 1 to 20",
 			"type": "string",
 			"description": "Video name for preview testing"
 		}
@@ -68,12 +68,11 @@
 								"health"
 							]
 						},
-						"description": "### Service Health Check\n\nCheck if the service is healthy and running.\n\n**Authentication:** None required\n\n**Expected Response (200):**\n```json\n{\n  \"status\": \"healthy\",\n  \"service\": \"description-service\",\n  \"version\": \"1.0.0\"\n}\n```"
+						"description": "### Service Health Check\n\n**No authentication required**\n\n**Expected Response:**\n```json\n{\n  \"status\": \"healthy\",\n  \"service\": \"description-service\",\n  \"version\": \"1.0.0\"\n}\n```"
 					},
 					"response": []
 				}
-			],
-			"description": "Health check endpoint - no authentication required"
+			]
 		},
 		{
 			"name": "📝 Description Generation",
@@ -85,13 +84,12 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"// Auto-save job_id for status polling",
+									"// Auto-save job_id",
 									"if (pm.response.code === 200) {",
 									"    var jsonData = pm.response.json();",
 									"    if (jsonData.job_id) {",
 									"        pm.collectionVariables.set(\"job_id\", jsonData.job_id);",
 									"        console.log(\"✅ Job ID saved: \" + jsonData.job_id);",
-									"        console.log(\"→ Use 'Get Job Status' to check progress\");",
 									"    }",
 									"}"
 								],
@@ -109,7 +107,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"novel_name\": \"Farming at Hogwarts\",\n  \"novel_context\": \"A unique blend of system farming and political intrigue in Westeros. Arthur Snow awakens with the Three Kingdoms System, growing orchards that thrive in frost and raising ponies that race like wind. From outcast to king, driven by persistence and ingenuity.\",\n  \"playlist_url\": \"https://youtube.com/playlist?list=ABC123XYZ\",\n  \"subscribe_text\": \"For more Game of Thrones fanfiction audiobooks and epic farming system stories, subscribe to The Forge of Myths and Legends and hit the bell icon so you never miss a chapter!\",\n  \"force\": false\n}",
+							"raw": "{\n  \"novel_name\": \"Farming at Hogwarts\",\n  \"novel_context\": \"A magical farming system fanfiction set in the Harry Potter universe. The protagonist discovers an enchanted agricultural system at Hogwarts, allowing them to grow magical plants, raise mythical creatures, and transform the school grounds into a thriving magical farm.\",\n  \"playlist_url\": \"https://youtube.com/playlist?list=PLFarmingAtHogwarts\",\n  \"subscribe_text\": \"For more Harry Potter fanfiction audiobooks and magical farming system stories, subscribe to Audio Novel Forge and hit the bell icon!\",\n  \"force\": false\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -125,58 +123,7 @@
 								"generate-descriptions"
 							]
 						},
-						"description": "### Start Description Generation\n\nGenerate YouTube descriptions for all videos in a novel.\n\n**Request Body:**\n- `novel_name` (required) - Name of the novel\n- `novel_context` (required) - Brief summary for AI generation\n- `playlist_url` (required) - YouTube playlist URL\n- `subscribe_text` (required) - Subscribe call-to-action\n- `force` (optional) - Set to `true` to regenerate existing descriptions\n\n**Process:**\n1. Generates novel-level AI content (What to Expect + SEO tags)\n2. Fetches all timestamp files from S3\n3. Creates description for each video\n4. Skips videos with existing descriptions (unless force=true)\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"job_id\": \"uuid-here\",\n  \"status\": \"processing\",\n  \"message\": \"Description generation started\",\n  \"poll_url\": \"/jobs/{job_id}\"\n}\n```\n\n**Note:** job_id is automatically saved to collection variables"
-					},
-					"response": []
-				},
-				{
-					"name": "1. Generate Descriptions (Force Regenerate)",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"// Auto-save job_id for status polling",
-									"if (pm.response.code === 200) {",
-									"    var jsonData = pm.response.json();",
-									"    if (jsonData.job_id) {",
-									"        pm.collectionVariables.set(\"job_id\", jsonData.job_id);",
-									"        console.log(\"✅ Job ID saved: \" + jsonData.job_id);",
-									"        console.log(\"⚠️  Force mode: Will regenerate ALL descriptions\");",
-									"    }",
-									"}"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"novel_name\": \"Farming at Hogwarts\",\n  \"novel_context\": \"A unique blend of system farming and political intrigue in Westeros. Arthur Snow awakens with the Three Kingdoms System, growing orchards that thrive in frost and raising ponies that race like wind. From outcast to king, driven by persistence and ingenuity.\",\n  \"playlist_url\": \"https://youtube.com/playlist?list=ABC123XYZ\",\n  \"subscribe_text\": \"For more Game of Thrones fanfiction audiobooks and epic farming system stories, subscribe to The Forge of Myths and Legends and hit the bell icon so you never miss a chapter!\",\n  \"force\": true\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{base_url}}/generate-descriptions",
-							"host": [
-								"{{base_url}}"
-							],
-							"path": [
-								"generate-descriptions"
-							]
-						},
-						"description": "### Force Regenerate All Descriptions\n\nRegenerate descriptions even if they already exist.\n\n**Use this when:**\n- You've updated AI prompts and want to regenerate\n- You want to update descriptions with new context\n- Something went wrong in previous generation\n\n**Warning:** This will overwrite ALL existing descriptions for the novel."
+						"description": "### Generate Descriptions (Novel-Level)\n\n**Efficiency:** 1 OpenAI call generates About/What to Expect/Tags for entire novel!\n\n**Request:**\n- `novel_name` - Novel name\n- `novel_context` - Brief description for AI\n- `playlist_url` - YouTube playlist\n- `subscribe_text` - Subscribe message\n- `force` - false = skip existing, true = regenerate all\n\n**Process:**\n1. Calls OpenAI once with 10k tokens\n2. Generates 3 sections (About, What to Expect, Tags)\n3. Stores in database\n4. For each video:\n   - Reads unique timestamps\n   - Builds description using SAME AI content\n   - Saves to S3\n\n**Cost:** ~$0.02 per novel (not per video!)\n**Time:** ~6 seconds for 8 videos"
 					},
 					"response": []
 				},
@@ -195,7 +142,7 @@
 								"{{job_id}}"
 							]
 						},
-						"description": "### Check Job Status\n\nPoll this endpoint to track description generation progress.\n\n**Path Parameter:**\n- `job_id` - Auto-populated from generate-descriptions response\n\n**Response - Processing (200):**\n```json\n{\n  \"job_id\": \"uuid\",\n  \"status\": \"processing\",\n  \"progress\": {\n    \"descriptions_generated\": 5,\n    \"total_videos\": 10,\n    \"percent_complete\": 50\n  },\n  \"started_at\": \"2025-10-30T12:00:00Z\",\n  \"updated_at\": \"2025-10-30T12:02:00Z\"\n}\n```\n\n**Response - Completed (200):**\n```json\n{\n  \"job_id\": \"uuid\",\n  \"status\": \"completed\",\n  \"progress\": {\n    \"descriptions_generated\": 10,\n    \"total_videos\": 10,\n    \"percent_complete\": 100\n  },\n  \"completed_at\": \"2025-10-30T12:05:00Z\",\n  \"message\": \"All 10 descriptions generated successfully\"\n}\n```\n\n**Tip:** Poll every 2-3 seconds until status is 'completed' or 'failed'"
+						"description": "### Monitor Generation Progress\n\n**Response:**\n```json\n{\n  \"job_id\": \"uuid\",\n  \"status\": \"processing\",\n  \"progress\": {\n    \"descriptions_generated\": 5,\n    \"total_videos\": 8,\n    \"percent_complete\": 62.5\n  }\n}\n```\n\n**Poll every 2-3 seconds until status is 'completed'**"
 					},
 					"response": []
 				},
@@ -214,12 +161,12 @@
 								"{{novel_name}}"
 							]
 						},
-						"description": "### List All Descriptions\n\nGet a list of all description files for a novel.\n\n**Path Parameter:**\n- `novel_name` - Novel name (can edit in collection variables)\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"novel_name\": \"Farming at Hogwarts\",\n  \"total_descriptions\": 10,\n  \"videos\": [\n    \"Chapter-1\",\n    \"Chapter-2\",\n    \"Chapter-3\",\n    ...\n  ]\n}\n```\n\n**Use this to:**\n- Verify all descriptions were generated\n- Get video names for preview\n- Check what exists before force regeneration"
+						"description": "### List Descriptions for a Novel\n\n**Returns:** All video names that have descriptions"
 					},
 					"response": []
 				},
 				{
-					"name": "4. Preview Specific Description",
+					"name": "4. Preview Description",
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -234,12 +181,11 @@
 								"{{video_name}}"
 							]
 						},
-						"description": "### Preview Description\n\nGet the full description content for a specific video.\n\n**Path Parameters:**\n- `novel_name` - Novel name\n- `video_name` - Video name (without .txt extension)\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"novel_name\": \"Farming at Hogwarts\",\n  \"video_name\": \"Chapter-1\",\n  \"description\": \"Full Playlist: https://...\\n\\n📚 About...\\n\\n⭐ What to Expect...\\n\\n🔔 Subscribe...\\n\\n⏰ Timestamps:\\n...\\n\\n500-character tag block:\\n#Tags...\"\n}\n```\n\n**Description Format:**\n- Full Playlist link\n- About section\n- What to Expect (AI-generated)\n- Subscribe text\n- Timestamps (from S3)\n- SEO tags (AI-generated)\n\n**Use this for:**\n- Frontend preview before publishing\n- Verifying AI-generated content\n- Quality assurance"
+						"description": "### Preview Full Description\n\n**Returns complete description with:**\n- Full Playlist URL\n- About section (8-13 lines)\n- What to Expect (3-6 sentences)\n- Subscribe text\n- Timestamps (unique per video)\n- Tags (12 hashtags)"
 					},
 					"response": []
 				}
-			],
-			"description": "Endpoints for generating and managing descriptions"
+			]
 		},
 		{
 			"name": "⚙️ Admin - Prompt Management",
@@ -259,52 +205,52 @@
 								"prompts"
 							]
 						},
-						"description": "### List All AI Prompts\n\nView all prompts stored in the database.\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"total_prompts\": 2,\n  \"prompts\": [\n    {\n      \"id\": 1,\n      \"name\": \"what_to_expect\",\n      \"description\": \"Generates the What to Expect section\",\n      \"prompt_text\": \"Generate a compelling...\",\n      \"created_at\": \"2025-10-30T12:00:00Z\",\n      \"updated_at\": \"2025-10-30T12:00:00Z\"\n    },\n    {\n      \"id\": 2,\n      \"name\": \"seo_tags\",\n      \"description\": \"Generates SEO hashtags\",\n      \"prompt_text\": \"Generate highly SEO-optimized...\",\n      \"created_at\": \"2025-10-30T12:00:00Z\",\n      \"updated_at\": \"2025-10-30T12:00:00Z\"\n    }\n  ]\n}\n```\n\n**Available Prompts:**\n- `what_to_expect` - 2-3 sentence engaging hook\n- `seo_tags` - 500-character hashtag block"
+						"description": "### List All Prompts\n\n**Returns 2 prompts:**\n\n1. **description_system** (system)\n   - Controls output format\n   - Defines section headers (ABOUT:, WHAT_TO_EXPECT:, TAGS:)\n\n2. **full_description** (user)\n   - Defines content requirements\n   - Specifies lengths and style\n\n**Response:**\n```json\n{\n  \"success\": true,\n  \"total_prompts\": 2,\n  \"prompts\": [\n    {\n      \"name\": \"description_system\",\n      \"prompt_type\": \"system\",\n      \"description\": \"Controls output format\"\n    },\n    {\n      \"name\": \"full_description\",\n      \"prompt_type\": \"user\",\n      \"description\": \"Generates content\"\n    }\n  ]\n}\n```"
 					},
 					"response": []
 				},
 				{
-					"name": "Get Prompt - What to Expect",
+					"name": "Get System Prompt (Format Control)",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/admin/prompts/what_to_expect",
+							"raw": "{{base_url}}/admin/prompts/description_system",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"admin",
 								"prompts",
-								"what_to_expect"
+								"description_system"
 							]
 						},
-						"description": "### Get 'What to Expect' Prompt\n\nView the prompt used to generate the engaging 2-3 sentence hook.\n\n**Variables available in prompt:**\n- `{novel_name}` - Novel title\n- `{novel_context}` - User-provided context\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"prompt\": {\n    \"id\": 1,\n    \"name\": \"what_to_expect\",\n    \"description\": \"Generates What to Expect section\",\n    \"prompt_text\": \"Full prompt text...\",\n    \"updated_at\": \"2025-10-30T12:00:00Z\"\n  }\n}\n```"
+						"description": "### Get System Prompt\n\n**Purpose:** Controls how AI structures output\n\n**Defines:**\n- Section headers (ABOUT:, WHAT_TO_EXPECT:, TAGS:)\n- Output format rules\n- Structure requirements\n\n**Edit this to change output format**"
 					},
 					"response": []
 				},
 				{
-					"name": "Get Prompt - SEO Tags",
+					"name": "Get User Prompt (Content Generation)",
 					"request": {
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": "{{base_url}}/admin/prompts/seo_tags",
+							"raw": "{{base_url}}/admin/prompts/full_description",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"admin",
 								"prompts",
-								"seo_tags"
+								"full_description"
 							]
 						},
-						"description": "### Get 'SEO Tags' Prompt\n\nView the prompt used to generate SEO-optimized hashtags.\n\n**Variables available in prompt:**\n- `{novel_name}` - Novel title\n- `{novel_context}` - User-provided context\n- `{what_to_expect}` - Previously generated What to Expect section\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"prompt\": {\n    \"id\": 2,\n    \"name\": \"seo_tags\",\n    \"description\": \"Generates SEO hashtags\",\n    \"prompt_text\": \"Full prompt text...\",\n    \"updated_at\": \"2025-10-30T12:00:00Z\"\n  }\n}\n```"
+						"description": "### Get User Prompt\n\n**Purpose:** Defines content requirements\n\n**Specifies:**\n- About: 8-13 lines\n- What to Expect: 3-6 sentences\n- Tags: 500 chars max\n- Tone, style, what to include\n\n**Variables:**\n- `{novel_name}` - Novel title\n- `{novel_context}` - User context\n\n**Edit this to change content generation**"
 					},
 					"response": []
 				},
 				{
-					"name": "Update Prompt - What to Expect",
+					"name": "Update System Prompt (Format)",
 					"request": {
 						"method": "PATCH",
 						"header": [
@@ -315,7 +261,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"prompt_text\": \"Generate a compelling 2-3 sentence 'What to Expect' section for a YouTube audiobook video description.\\n\\nNovel Title: {novel_name}\\nContext: {novel_context}\\n\\nRequirements:\\n- 2-3 sentences maximum\\n- Engaging and enticing to potential listeners\\n- Highlight unique aspects (e.g., system mechanics, character journey, setting blend)\\n- Use emotive language that creates excitement\\n- Focus on what makes this story unique\\n- No promotional language (no 'subscribe', 'don't miss', etc.)\\n\\nExample output:\\n'Farming Meets Thrones: A unique blend of system farming and political intrigue in Westeros. Three Kingdoms System: Grow, equip, and evolve through cards that defy the harsh world of ice and fire. Rise from the North: Follow Arthur Snow's journey from outcast to king, driven by persistence and ingenuity.'\\n\\nGenerate the 'What to Expect' section:\",\n  \"description\": \"Updated prompt for generating the What to Expect section\"\n}",
+							"raw": "{\n  \"prompt_text\": \"You are an expert at writing YouTube descriptions.\\n\\nCRITICAL: Return in EXACTLY this format:\\n\\nABOUT:\\n[8-13 lines]\\n\\nWHAT_TO_EXPECT:\\n[3-6 sentences]\\n\\nTAGS:\\n[Hashtags, max 500 chars]\\n\\nRULES:\\n1. Use exact headers: ABOUT:, WHAT_TO_EXPECT:, TAGS:\\n2. One blank line between sections\\n3. No extra formatting\",\n  \"description\": \"System prompt for output format control\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -323,22 +269,22 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/admin/prompts/what_to_expect",
+							"raw": "{{base_url}}/admin/prompts/description_system",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"admin",
 								"prompts",
-								"what_to_expect"
+								"description_system"
 							]
 						},
-						"description": "### Update 'What to Expect' Prompt\n\nEdit the prompt used for generating the What to Expect section.\n\n**Request Body:**\n- `prompt_text` (required) - New prompt text\n- `description` (optional) - Updated description\n\n**Available Variables:**\n- `{novel_name}` - Will be replaced with novel title\n- `{novel_context}` - Will be replaced with user context\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"message\": \"Prompt 'what_to_expect' updated successfully\",\n  \"prompt\": {\n    \"id\": 1,\n    \"name\": \"what_to_expect\",\n    \"prompt_text\": \"Updated text...\",\n    \"updated_at\": \"2025-10-30T13:00:00Z\"\n  }\n}\n```\n\n**⚠️ Important:**\n- Changes take effect immediately\n- Use force=true when regenerating to see changes\n- Test with a single novel first"
+						"description": "### Update System Prompt\n\n**Controls:** Output format structure\n\n**Use this to:**\n- Change section headers\n- Modify output structure\n- Add/remove formatting rules\n\n**Takes effect immediately for new generations**"
 					},
 					"response": []
 				},
 				{
-					"name": "Update Prompt - SEO Tags",
+					"name": "Update User Prompt (Content)",
 					"request": {
 						"method": "PATCH",
 						"header": [
@@ -349,7 +295,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"prompt_text\": \"Generate highly SEO-optimized YouTube tags for this audiobook.\\n\\nNovel: {novel_name}\\nContext: {novel_context}\\nWhat to Expect: {what_to_expect}\\n\\nRequirements:\\n- Hashtag format (#tag)\\n- Mix of broad and specific tags\\n- Include: genre, tropes, themes, character types, settings\\n- Highly discoverable keywords for YouTube search\\n- EXACTLY 500 characters or less (critical!)\\n- Order: specific → broad (e.g., #FarmingSystem #GameOfThrones #Audiobook)\\n\\nExample format:\\n#GameOfThronesDraconicFarming #GameOfThronesFanfiction #ASongOfIceAndFireFanfic #ForgeOfMythsAndLegends #AudioNovelForge #FanficAudiobook #ThreeKingdomsSystem #FarmingSystemFanfic #FarmingFanfic #ImmersiveAudiobook #FanficCommunity #GameOfThronesAudiobook #EpicFantasyFanfic #FanficSeries #FanMadeStory #RiseFromTheNorth #DraconicFarming\\n\\nGenerate tags (500 chars max):\",\n  \"description\": \"Updated prompt for generating SEO tags\"\n}",
+							"raw": "{\n  \"prompt_text\": \"Generate YouTube description for novel.\\n\\nNovel: {novel_name}\\nContext: {novel_context}\\n\\nABOUT (8-13 lines):\\n- Introduce world and premise\\n- For fanfic: mention original universe\\n- Immersive language\\n- NO promo language\\n\\nWHAT_TO_EXPECT (3-6 sentences):\\n- Content summary\\n- Unique aspects\\n- Emotive language\\n- NO promo language\\n\\nTAGS (500 chars max):\\n- Hashtags (#tag)\\n- Mix broad/specific\\n- YouTube keywords\\n- Order: specific → broad\",\n  \"description\": \"User prompt for content generation\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -357,23 +303,22 @@
 							}
 						},
 						"url": {
-							"raw": "{{base_url}}/admin/prompts/seo_tags",
+							"raw": "{{base_url}}/admin/prompts/full_description",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
 								"admin",
 								"prompts",
-								"seo_tags"
+								"full_description"
 							]
 						},
-						"description": "### Update 'SEO Tags' Prompt\n\nEdit the prompt used for generating SEO hashtags.\n\n**Request Body:**\n- `prompt_text` (required) - New prompt text\n- `description` (optional) - Updated description\n\n**Available Variables:**\n- `{novel_name}` - Novel title\n- `{novel_context}` - User-provided context\n- `{what_to_expect}` - Previously generated What to Expect\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"message\": \"Prompt 'seo_tags' updated successfully\",\n  \"prompt\": {\n    \"id\": 2,\n    \"name\": \"seo_tags\",\n    \"prompt_text\": \"Updated text...\",\n    \"updated_at\": \"2025-10-30T13:00:00Z\"\n  }\n}\n```\n\n**⚠️ Important:**\n- Must stay under 500 characters\n- Changes apply to new generations immediately\n- Test thoroughly before production use"
+						"description": "### Update User Prompt\n\n**Controls:** Content generation requirements\n\n**Use this to:**\n- Change section lengths\n- Modify tone and style\n- Update content requirements\n- Add/remove guidelines\n\n**Variables:**\n- `{novel_name}` - Novel title\n- `{novel_context}` - User context\n\n**Takes effect immediately for new generations**"
 					},
 					"response": []
 				}
 			],
-			"description": "Admin endpoints for managing AI prompts"
+			"description": "Manage the 2 prompts:\n- description_system (system) - Format control\n- full_description (user) - Content generation"
 		}
 	]
 }
-
