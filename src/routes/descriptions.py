@@ -61,10 +61,11 @@ def generate_descriptions_task(
         # Step 1: Generate ALL content in one API call (no database connection during API call)
         logger.info(f"Generating AI content for novel: {novel_name}")
         
-        # Single unified API call for all three sections
+        # Single unified API call for all four sections
         sections = openai_service.generate_all_sections(novel_name, novel_context)
         about = sections['about']
         what_to_expect = sections['what_to_expect']
+        subscribe = sections['subscribe']
         seo_tags = sections['tags']
         
         # Save AI-generated content to database (short transaction)
@@ -72,6 +73,7 @@ def generate_descriptions_task(
             'processing',
             generated_about=about,
             generated_what_to_expect=what_to_expect,
+            generated_subscribe=subscribe,
             generated_tags=seo_tags
         )
         
@@ -130,7 +132,7 @@ def generate_descriptions_task(
                     novel_name=novel_name,
                     about=about,
                     what_to_expect=what_to_expect,
-                    subscribe_text=subscribe_text,
+                    subscribe=subscribe,
                     timestamps=timestamps,
                     seo_tags=seo_tags
                 )
@@ -199,7 +201,7 @@ def generate_descriptions():
         novel_name = data['novel_name']
         novel_context = data['novel_context']
         playlist_url = data['playlist_url']
-        subscribe_text = data['subscribe_text']
+        subscribe_text = data.get('subscribe_text', '')  # Optional now (AI generates it)
         force = data.get('force', False)
         
         # Generate unique job ID

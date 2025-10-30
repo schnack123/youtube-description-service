@@ -13,7 +13,7 @@ class TemplateService:
         novel_name: str,
         about: str,
         what_to_expect: str,
-        subscribe_text: str,
+        subscribe: str,
         timestamps: str,
         seo_tags: str
     ) -> str:
@@ -25,7 +25,7 @@ class TemplateService:
             novel_name: Name of the novel
             about: AI-generated "About" section (8-13 lines)
             what_to_expect: AI-generated "What to Expect" section (3-6 sentences)
-            subscribe_text: User-provided subscribe call-to-action
+            subscribe: AI-generated subscribe call-to-action (2-3 sentences)
             timestamps: Timestamp content from S3
             seo_tags: AI-generated SEO hashtags (500 chars)
             
@@ -45,7 +45,7 @@ class TemplateService:
 
 🔔 Subscribe for More
 
-{subscribe_text}
+{subscribe}
 
 ⏰ Timestamps:
 

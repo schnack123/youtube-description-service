@@ -12,7 +12,7 @@ def validate_generate_request(data: Dict[str, Any]) -> tuple[bool, Optional[str]
     Returns:
         (is_valid, error_message)
     """
-    required_fields = ['novel_name', 'novel_context', 'playlist_url', 'subscribe_text']
+    required_fields = ['novel_name', 'novel_context', 'playlist_url']
     
     for field in required_fields:
         if not data.get(field):
@@ -32,9 +32,11 @@ def validate_generate_request(data: Dict[str, Any]) -> tuple[bool, Optional[str]
     if len(data['novel_context']) > 5000:
         return False, "novel_context too long: maximum 5000 characters"
     
-    # Validate subscribe_text length
-    if len(data['subscribe_text']) > 1000:
-        return False, "subscribe_text too long: maximum 1000 characters"
+    # subscribe_text is now optional (AI generates it)
+    # If provided, validate it (for backward compatibility or override)
+    if 'subscribe_text' in data and data['subscribe_text']:
+        if len(data['subscribe_text']) > 1000:
+            return False, "subscribe_text too long: maximum 1000 characters"
     
     return True, None
 

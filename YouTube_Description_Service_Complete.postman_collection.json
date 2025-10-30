@@ -107,7 +107,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"novel_name\": \"Farming at Hogwarts\",\n  \"novel_context\": \"A magical farming system fanfiction set in the Harry Potter universe. The protagonist discovers an enchanted agricultural system at Hogwarts, allowing them to grow magical plants, raise mythical creatures, and transform the school grounds into a thriving magical farm.\",\n  \"playlist_url\": \"https://youtube.com/playlist?list=PLFarmingAtHogwarts\",\n  \"subscribe_text\": \"For more Harry Potter fanfiction audiobooks and magical farming system stories, subscribe to Audio Novel Forge and hit the bell icon!\",\n  \"force\": false\n}",
+							"raw": "{\n  \"novel_name\": \"Farming at Hogwarts\",\n  \"novel_context\": \"A magical farming system fanfiction set in the Harry Potter universe. The protagonist discovers an enchanted agricultural system at Hogwarts, allowing them to grow magical plants, raise mythical creatures, and transform the school grounds into a thriving magical farm.\",\n  \"playlist_url\": \"https://youtube.com/playlist?list=PLFarmingAtHogwarts\",\n  \"force\": false\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -123,7 +123,7 @@
 								"generate-descriptions"
 							]
 						},
-						"description": "### Generate Descriptions (Novel-Level)\n\n**Efficiency:** 1 OpenAI call generates About/What to Expect/Tags for entire novel!\n\n**Request:**\n- `novel_name` - Novel name\n- `novel_context` - Brief description for AI\n- `playlist_url` - YouTube playlist\n- `subscribe_text` - Subscribe message\n- `force` - false = skip existing, true = regenerate all\n\n**Process:**\n1. Calls OpenAI once with 10k tokens\n2. Generates 3 sections (About, What to Expect, Tags)\n3. Stores in database\n4. For each video:\n   - Reads unique timestamps\n   - Builds description using SAME AI content\n   - Saves to S3\n\n**Cost:** ~$0.02 per novel (not per video!)\n**Time:** ~6 seconds for 8 videos"
+						"description": "### Generate Descriptions (Novel-Level)\n\n**Efficiency:** 1 OpenAI call generates all 4 sections for entire novel!\n\n**Request:**\n- `novel_name` (required) - Novel name\n- `novel_context` (required) - Brief description for AI\n- `playlist_url` (required) - YouTube playlist\n- `subscribe_text` (optional) - Custom subscribe text (AI generates if omitted)\n- `force` (optional) - false = skip existing, true = regenerate all\n\n**AI Generates:**\n1. About (8-13 lines)\n2. What to Expect (3-6 sentences)\n3. Subscribe (2-3 sentences) ← AI-generated!\n4. Tags (hashtags, 500 chars max)\n\n**Process:**\n1. Calls OpenAI once with 10k tokens\n2. Generates 4 sections\n3. Stores in database\n4. For each video:\n   - Reads unique timestamps\n   - Builds description using SAME AI content\n   - Saves to S3\n\n**Cost:** ~$0.02 per novel (not per video!)\n**Time:** ~6 seconds for 8 videos"
 					},
 					"response": []
 				},

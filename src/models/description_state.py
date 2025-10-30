@@ -26,6 +26,7 @@ class WorkflowDescriptionState(Base):
     # AI-generated content (novel-level)
     generated_about = Column(Text)
     generated_what_to_expect = Column(Text)
+    generated_subscribe = Column(Text)
     generated_tags = Column(Text)
     
     # Timestamps

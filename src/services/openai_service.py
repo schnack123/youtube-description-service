@@ -121,10 +121,11 @@ class OpenAIService:
             full_content = content.strip()
             logger.info(f"Generated full content ({len(full_content)} chars)")
             
-            # Parse the three sections
-            # Expected format from system prompt: "ABOUT:\n[content]\n\nWHAT_TO_EXPECT:\n[content]\n\nTAGS:\n[content]"
+            # Parse the four sections
+            # Expected format: "ABOUT:\n[content]\n\nWHAT_TO_EXPECT:\n[content]\n\nSUBSCRIBE:\n[content]\n\nTAGS:\n[content]"
             about = ""
             what_to_expect = ""
+            subscribe = ""
             tags = ""
             
             try:
@@ -137,17 +138,21 @@ class OpenAIService:
                 # Find section positions
                 about_start = 0
                 wte_start = content_upper.find("WHAT_TO_EXPECT:")
+                subscribe_start = content_upper.find("SUBSCRIBE:")
                 tags_start = content_upper.find("TAGS:")
                 
-                logger.info(f"Section positions - WTE: {wte_start}, TAGS: {tags_start}")
+                logger.info(f"Section positions - WTE: {wte_start}, SUBSCRIBE: {subscribe_start}, TAGS: {tags_start}")
                 
-                if wte_start > 0 and tags_start > 0:
-                    # Extract all three sections
+                if wte_start > 0 and subscribe_start > 0 and tags_start > 0:
+                    # Extract all four sections
                     about_section = full_content[about_start:wte_start]
                     about = about_section.replace("ABOUT:", "").replace("About:", "").strip()
                     
-                    wte_section = full_content[wte_start:tags_start]
+                    wte_section = full_content[wte_start:subscribe_start]
                     what_to_expect = wte_section.replace("WHAT_TO_EXPECT:", "").replace("What_to_Expect:", "").strip()
+                    
+                    subscribe_section = full_content[subscribe_start:tags_start]
+                    subscribe = subscribe_section.replace("SUBSCRIBE:", "").replace("Subscribe:", "").strip()
                     
                     tags_section = full_content[tags_start:]
                     tags = tags_section.replace("TAGS:", "").replace("Tags:", "").strip()
@@ -157,18 +162,10 @@ class OpenAIService:
                         logger.warning(f"Tags too long ({len(tags)} chars), truncating to 500")
                         tags = tags[:497] + "..."
                     
-                    logger.info(f"✅ Parsed all 3 sections successfully")
-                elif wte_start > 0:
-                    # At least have about and what_to_expect
-                    about_section = full_content[about_start:wte_start]
-                    about = about_section.replace("ABOUT:", "").replace("About:", "").strip()
-                    
-                    what_to_expect = full_content[wte_start:].replace("WHAT_TO_EXPECT:", "").replace("What_to_Expect:", "").strip()
-                    
-                    logger.warning("Only found ABOUT and WHAT_TO_EXPECT sections")
+                    logger.info(f"✅ Parsed all 4 sections successfully")
                 else:
-                    # Fallback: use entire content as about
-                    logger.warning("Could not find section markers, using full content as about")
+                    # Fallback parsing
+                    logger.warning(f"Could not find all section markers. Found - WTE: {wte_start > 0}, SUBSCRIBE: {subscribe_start > 0}, TAGS: {tags_start > 0}")
                     about = full_content.replace("ABOUT:", "").strip()
             
             except Exception as parse_error:
@@ -176,11 +173,12 @@ class OpenAIService:
                 # Fallback: use full content as about
                 about = full_content
             
-            logger.info(f"Final sections - About: {len(about)} chars, WTE: {len(what_to_expect)} chars, Tags: {len(tags)} chars")
+            logger.info(f"Final sections - About: {len(about)} chars, WTE: {len(what_to_expect)} chars, Subscribe: {len(subscribe)} chars, Tags: {len(tags)} chars")
             
             return {
                 'about': about,
                 'what_to_expect': what_to_expect,
+                'subscribe': subscribe,
                 'tags': tags
             }
             

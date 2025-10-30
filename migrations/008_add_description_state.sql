@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS workflow_description_state (
     -- AI-generated content (novel-level)
     generated_about TEXT,
     generated_what_to_expect TEXT,
+    generated_subscribe TEXT,
     generated_tags TEXT,
     
     -- Timestamps
