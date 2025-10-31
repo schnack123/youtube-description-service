@@ -184,6 +184,25 @@
 						"description": "### Preview Full Description\n\n**Returns complete description with:**\n- Full Playlist URL\n- About section (8-13 lines)\n- What to Expect (3-6 sentences)\n- Subscribe text\n- Timestamps (unique per video)\n- Tags (12 hashtags)"
 					},
 					"response": []
+				},
+				{
+					"name": "5. Get Novel Context",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/novel-context/{{novel_name}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"novel-context",
+								"{{novel_name}}"
+							]
+						},
+						"description": "### Get Novel Context Data\n\n**Purpose:** Fetch the latest completed workflow data for a novel\n\n**Returns:**\n- `novel_context` - The context/description of the novel\n- `playlist_url` - The YouTube playlist URL\n- `subscribe_text` - The subscribe call-to-action text\n\n**Behavior:**\n- Returns data from the most recent completed workflow (highest ID)\n- Only considers workflows with status='completed'\n- Returns null values if no completed workflow exists\n\n**Use Case:** Frontend can retrieve these values to display or pre-fill forms"
+					},
+					"response": []
 				}
 			]
 		},

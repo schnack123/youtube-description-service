@@ -330,3 +330,41 @@ def get_description(novel_name, video_name):
         logger.error(f"Error getting description: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500
 
+
+@descriptions_bp.route('/novel-context/<novel_name>', methods=['GET'])
+def get_novel_context(novel_name):
+    """Get novel context data from most recent completed workflow"""
+    try:
+        session = get_db()
+        try:
+            # Query for most recent completed state by ID
+            state = session.query(WorkflowDescriptionState)\
+                .filter_by(novel_name=novel_name, status='completed')\
+                .order_by(WorkflowDescriptionState.id.desc())\
+                .first()
+            
+            if not state:
+                # Return 200 with null values if no completed entry exists
+                return jsonify({
+                    'success': True,
+                    'novel_name': novel_name,
+                    'novel_context': None,
+                    'playlist_url': None,
+                    'subscribe_text': None
+                }), 200
+            
+            return jsonify({
+                'success': True,
+                'novel_name': novel_name,
+                'novel_context': state.novel_context,
+                'playlist_url': state.playlist_url,
+                'subscribe_text': state.subscribe_text
+            }), 200
+            
+        finally:
+            session.close()
+        
+    except Exception as e:
+        logger.error(f"Error getting novel context: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
