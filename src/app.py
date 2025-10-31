@@ -86,6 +86,23 @@ def check_auth():
         return jsonify({'success': False, 'error': 'Invalid API token'}), 401
 
 
+@app.after_request
+def after_request(response):
+    """Ensure CORS headers are set on all responses including errors"""
+    origin = request.headers.get('Origin')
+    
+    # Check if origin is in allowed origins
+    if origin and origin in config.CORS_ORIGINS:
+        response.headers['Access-Control-Allow-Origin'] = origin
+        response.headers['Access-Control-Allow-Methods'] = 'GET, POST, PATCH, DELETE, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, Accept'
+        response.headers['Access-Control-Expose-Headers'] = 'Content-Type'
+        response.headers['Access-Control-Allow-Credentials'] = 'true'
+        response.headers['Access-Control-Max-Age'] = '3600'
+    
+    return response
+
+
 @app.route('/health', methods=['GET', 'OPTIONS'])
 def health_check():
     """Health check endpoint"""
